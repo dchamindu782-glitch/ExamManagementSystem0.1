@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import schoolInformationsystem.demo.model.Exam;
 import schoolInformationsystem.demo.model.ExamResult;
 import schoolInformationsystem.demo.model.Student;
@@ -86,7 +87,8 @@ public class ExamViewController {
     @PostMapping("/marks/save-batch")
     public String saveBatchMarks(@RequestParam("examId") String examId,
                                  @RequestParam("subjectId") String subjectId,
-                                 @RequestParam Map<String, String> allParams) {
+                                 @RequestParam Map<String, String> allParams,
+                                 RedirectAttributes redirectAttributes) {
 
         Optional<Exam> examOpt = examRepository.findById(examId);
         Optional<Subject> subjectOpt = subjectRepository.findById(subjectId);
@@ -95,11 +97,21 @@ public class ExamViewController {
             Exam exam = examOpt.get();
             Subject subject = subjectOpt.get();
 
+            int savedCount = 0;
+            int skippedCount = 0;
+
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("marks_") && !entry.getValue().trim().isEmpty()) {
                     String studentId = entry.getKey().replace("marks_", "");
                     try {
-                        Double marks = Double.parseDouble(entry.getValue());
+                        Double marks = Double.parseDouble(entry.getValue().trim());
+
+                        // --- Step 4 Polish: Marks Validation (0.0 - 100.0) ---
+                        if (marks < 0.0 || marks > 100.0) {
+                            skippedCount++;
+                            continue; // 0 ට අඩු හෝ 100 ට වැඩි නම් database එකට නොදා skip කරයි
+                        }
+
                         Optional<Student> studentOpt = studentRepository.findById(studentId);
 
                         if (studentOpt.isPresent()) {
@@ -137,11 +149,22 @@ public class ExamViewController {
                             resultToSave.setRemarks(remarks);
 
                             examResultRepository.save(resultToSave);
+                            savedCount++;
                         }
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                        skippedCount++;
+                    }
                 }
             }
+
+            if (skippedCount > 0) {
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        savedCount + " marks saved. " + skippedCount + " invalid scores skipped (Scores must be between 0 and 100).");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "All marks saved successfully!");
+            }
         }
+
         return "redirect:/marks/entry?examId=" + examId + "&subjectId=" + subjectId + "&success=true";
     }
 
