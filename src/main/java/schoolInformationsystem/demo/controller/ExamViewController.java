@@ -44,11 +44,34 @@ public class ExamViewController {
         this.examResultRepository = examResultRepository;
     }
 
-    @GetMapping({"/", "/exams"})
-    public String showExamsDashboard(Model model) {
-        model.addAttribute("exams", examRepository.findAll());
-        return "exam-dashboard";
+   @GetMapping({"/", "/exams"})
+public String showExamsDashboard(Model model) {
+    // 1. Scheduled Exams
+    List<Exam> exams = examRepository.findAll();
+    model.addAttribute("exams", exams);
+
+    // 2. Active / Enrolled Students Count
+    long activeStudentsCount = studentRepository.count();
+    model.addAttribute("activeStudentsCount", activeStudentsCount);
+
+    // 3. Faculty Members (Active Subjects / Teachers Count)
+    long facultyMembersCount = subjectRepository.count();
+    model.addAttribute("facultyMembersCount", facultyMembersCount);
+
+    // 4. Overall Pass Rate Calculation (Marks >= 35.0)
+    List<ExamResult> allResults = examResultRepository.findAll();
+    double overallPassRate = 0.0;
+    if (!allResults.isEmpty()) {
+        long passedCount = allResults.stream()
+                .filter(r -> r.getMarks() != null && r.getMarks() >= 35.0)
+                .count();
+        overallPassRate = Math.round(((double) passedCount / allResults.size()) * 1000.0) / 10.0; // 1 decimal place (e.g., 85.5)
     }
+    model.addAttribute("overallPassRate", overallPassRate);
+
+    return "exam-dashboard";
+}
+    
 
     @PostMapping("/exams/save")
     public String saveExam(@ModelAttribute Exam exam) {
@@ -99,7 +122,7 @@ public class ExamViewController {
 
             int savedCount = 0;
             int skippedCount = 0;
-
+//Validation Marks
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("marks_") && !entry.getValue().trim().isEmpty()) {
                     String studentId = entry.getKey().replace("marks_", "");
@@ -109,11 +132,11 @@ public class ExamViewController {
                         // --- Step 4 Polish: Marks Validation (0.0 - 100.0) ---
                         if (marks < 0.0 || marks > 100.0) {
                             skippedCount++;
-                            continue; // 0 ට අඩු හෝ 100 ට වැඩි නම් database එකට නොදා skip කරයි
+                            continue; // 
                         }
 
                         Optional<Student> studentOpt = studentRepository.findById(studentId);
-
+//Grade Validation
                         if (studentOpt.isPresent()) {
                             String grade = "F";
                             String remarks = "Repeat";
