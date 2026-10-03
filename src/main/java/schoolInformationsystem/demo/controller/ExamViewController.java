@@ -44,34 +44,33 @@ public class ExamViewController {
         this.examResultRepository = examResultRepository;
     }
 
-   @GetMapping({"/", "/exams"})
-public String showExamsDashboard(Model model) {
-    // 1. Scheduled Exams
-    List<Exam> exams = examRepository.findAll();
-    model.addAttribute("exams", exams);
+    @GetMapping({"/", "/exams"})
+    public String showExamsDashboard(Model model) {
+        // 1. Scheduled Exams
+        List<Exam> exams = examRepository.findAll();
+        model.addAttribute("exams", exams);
 
-    // 2. Active / Enrolled Students Count
-    long activeStudentsCount = studentRepository.count();
-    model.addAttribute("activeStudentsCount", activeStudentsCount);
+        // 2. Active / Enrolled Students Count
+        long activeStudentsCount = studentRepository.count();
+        model.addAttribute("activeStudentsCount", activeStudentsCount);
 
-    // 3. Faculty Members (Active Subjects / Teachers Count)
-    long facultyMembersCount = subjectRepository.count();
-    model.addAttribute("facultyMembersCount", facultyMembersCount);
+        // 3. Faculty Members (Active Subjects / Teachers Count)
+        long facultyMembersCount = subjectRepository.count();
+        model.addAttribute("facultyMembersCount", facultyMembersCount);
 
-    // 4. Overall Pass Rate Calculation (Marks >= 35.0)
-    List<ExamResult> allResults = examResultRepository.findAll();
-    double overallPassRate = 0.0;
-    if (!allResults.isEmpty()) {
-        long passedCount = allResults.stream()
-                .filter(r -> r.getMarks() != null && r.getMarks() >= 35.0)
-                .count();
-        overallPassRate = Math.round(((double) passedCount / allResults.size()) * 1000.0) / 10.0; // 1 decimal place (e.g., 85.5)
+        // 4. Overall Pass Rate Calculation (Marks >= 35.0)
+        List<ExamResult> allResults = examResultRepository.findAll();
+        double overallPassRate = 0.0;
+        if (!allResults.isEmpty()) {
+            long passedCount = allResults.stream()
+                    .filter(r -> r.getMarks() != null && r.getMarks() >= 35.0)
+                    .count();
+            overallPassRate = Math.round(((double) passedCount / allResults.size()) * 1000.0) / 10.0; // 1 decimal place
+        }
+        model.addAttribute("overallPassRate", overallPassRate);
+
+        return "exam-dashboard";
     }
-    model.addAttribute("overallPassRate", overallPassRate);
-
-    return "exam-dashboard";
-}
-    
 
     @PostMapping("/exams/save")
     public String saveExam(@ModelAttribute Exam exam) {
@@ -95,21 +94,36 @@ public String showExamsDashboard(Model model) {
         return "redirect:/exams?deleted=true";
     }
 
+    // ================= MARKS ENTRY WITH CLASS GRADE FILTER =================
     @GetMapping("/marks/entry")
     public String showMarksEntry(@RequestParam(value = "examId", required = false) String examId,
                                  @RequestParam(value = "subjectId", required = false) String subjectId,
+                                 @RequestParam(value = "grade", required = false) String grade,
                                  Model model) {
+        
         model.addAttribute("exams", examRepository.findAll());
         model.addAttribute("subjects", subjectRepository.findAll());
-        model.addAttribute("students", studentRepository.findAll());
+
+        // Grade filter logic: Grade එකක් තෝරා ඇත්නම් ඒ Grade එකේ ළමයි පමණක් load වේ
+        List<Student> students;
+        if (grade != null && !grade.trim().isEmpty() && !grade.equalsIgnoreCase("ALL")) {
+            students = studentRepository.findByClassGrade(grade.trim());
+        } else {
+            students = studentRepository.findAll();
+        }
+
+        model.addAttribute("students", students);
         model.addAttribute("selectedExamId", examId);
         model.addAttribute("selectedSubjectId", subjectId);
+        model.addAttribute("selectedGrade", grade);
+
         return "marks-entry";
     }
 
     @PostMapping("/marks/save-batch")
     public String saveBatchMarks(@RequestParam("examId") String examId,
                                  @RequestParam("subjectId") String subjectId,
+                                 @RequestParam(value = "grade", required = false) String grade,
                                  @RequestParam Map<String, String> allParams,
                                  RedirectAttributes redirectAttributes) {
 
@@ -122,35 +136,37 @@ public String showExamsDashboard(Model model) {
 
             int savedCount = 0;
             int skippedCount = 0;
-//Validation Marks
+
+            // Validation & Marks Processing
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("marks_") && !entry.getValue().trim().isEmpty()) {
                     String studentId = entry.getKey().replace("marks_", "");
                     try {
                         Double marks = Double.parseDouble(entry.getValue().trim());
 
-                        // --- Step 4 Polish: Marks Validation (0.0 - 100.0) ---
+                        // Marks Range Validation (0.0 - 100.0)
                         if (marks < 0.0 || marks > 100.0) {
                             skippedCount++;
-                            continue; // 
+                            continue;
                         }
 
                         Optional<Student> studentOpt = studentRepository.findById(studentId);
-//Grade Validation
+
+                        // Grade Calculation
                         if (studentOpt.isPresent()) {
-                            String grade = "F";
+                            String assignedGrade = "F";
                             String remarks = "Repeat";
                             if (marks >= 75) {
-                                grade = "A";
+                                assignedGrade = "A";
                                 remarks = "Distinction";
                             } else if (marks >= 65) {
-                                grade = "B";
+                                assignedGrade = "B";
                                 remarks = "Very Good";
                             } else if (marks >= 55) {
-                                grade = "C";
+                                assignedGrade = "C";
                                 remarks = "Credit";
                             } else if (marks >= 35) {
-                                grade = "S";
+                                assignedGrade = "S";
                                 remarks = "Simple Pass";
                             }
 
@@ -168,7 +184,7 @@ public String showExamsDashboard(Model model) {
                             }
 
                             resultToSave.setMarks(marks);
-                            resultToSave.setGrade(grade);
+                            resultToSave.setGrade(assignedGrade);
                             resultToSave.setRemarks(remarks);
 
                             examResultRepository.save(resultToSave);
@@ -188,7 +204,11 @@ public String showExamsDashboard(Model model) {
             }
         }
 
-        return "redirect:/marks/entry?examId=" + examId + "&subjectId=" + subjectId + "&success=true";
+        String redirectUrl = "redirect:/marks/entry?examId=" + examId + "&subjectId=" + subjectId;
+        if (grade != null && !grade.trim().isEmpty()) {
+            redirectUrl += "&grade=" + grade;
+        }
+        return redirectUrl + "&success=true";
     }
 
     @GetMapping("/reports")
