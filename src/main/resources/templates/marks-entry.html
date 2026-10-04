@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Stick+No+Bills:wght@700;800&family=Yaldevi:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
 
     <style>
         body {
@@ -127,9 +129,14 @@
             <h1 class="text-lg font-bold text-slate-900">Enter Exam Marks</h1>
             <p class="text-xs text-slate-500">Record marks & auto-compute grades for <span class="font-mono text-indigo-600">Exam_Result</span></p>
         </div>
-        <a th:href="@{/exams}" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-        </a>
+        <div class="flex items-center gap-2">
+            <button type="button" data-theme-toggle class="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold px-3 py-2 rounded-lg transition" aria-label="Switch to dark mode" title="Switch to dark mode">
+                <i class="fa-solid fa-moon" data-theme-icon></i><span data-theme-label>Dark mode</span>
+            </button>
+            <a th:href="@{/exams}" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </header>
 
     <div class="p-6 space-y-6 max-w-6xl w-full mx-auto">

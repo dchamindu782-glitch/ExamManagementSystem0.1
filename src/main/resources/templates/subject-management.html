@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Stick+No+Bills:wght@700;800&family=Yaldevi:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
 
     <style>
         body {
@@ -127,10 +129,15 @@
             <h1 class="text-lg font-bold text-slate-900">Subject Management</h1>
             <p class="text-xs text-slate-500">Configure academic subjects, assigned teachers, and course codes</p>
         </div>
-        <button onclick="openSubjectModal()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
-            <i class="fa-solid fa-plus"></i>
-            <span>Add Subject</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <button type="button" data-theme-toggle class="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold px-3 py-2 rounded-lg transition" aria-label="Switch to dark mode" title="Switch to dark mode">
+                <i class="fa-solid fa-moon" data-theme-icon></i><span data-theme-label>Dark mode</span>
+            </button>
+            <button onclick="openSubjectModal()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Subject</span>
+            </button>
+        </div>
     </header>
 
     <div class="p-6 space-y-6 max-w-6xl w-full mx-auto">

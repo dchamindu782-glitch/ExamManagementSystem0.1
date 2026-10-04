@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Stick+No+Bills:wght@700;800&family=Yaldevi:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
 
     <style>
         body {
@@ -34,6 +36,26 @@
 
         .brand-badge {
           background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0) 75%);
+        }
+
+        @keyframes beamRun {
+          0% {
+            stroke-dashoffset: 600;
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            stroke-dashoffset: 0;
+            opacity: 0;
+          }
+        }
+
+        .run-beam {
+          stroke-dasharray: 120 180;
+          stroke-dashoffset: 600;
+          animation: beamRun 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
     </style>
 </head>
@@ -130,9 +152,14 @@
             <h1 class="text-lg font-bold text-slate-900">Class Performance & Grade Distribution</h1>
             <p class="text-xs text-slate-500">Aggregate result statistics computed across student batches</p>
         </div>
-        <button onclick="window.print()" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-arrow-down-to-bracket"></i> Export Summary
-        </button>
+        <div class="flex items-center gap-2">
+            <button type="button" data-theme-toggle class="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold px-3 py-2 rounded-lg transition" aria-label="Switch to dark mode" title="Switch to dark mode">
+                <i class="fa-solid fa-moon" data-theme-icon></i><span data-theme-label>Dark mode</span>
+            </button>
+            <button onclick="window.print()" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-arrow-down-to-bracket"></i> Export Summary
+            </button>
+        </div>
     </header>
 
     <div class="p-6 space-y-6 max-w-6xl w-full mx-auto">
@@ -159,33 +186,53 @@
 
         <!-- Dynamic Overview Metric Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-xs text-slate-500 font-medium">Batch Average</p>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <h3 class="text-2xl font-bold text-slate-800" th:text="${batchAverage + '%'}">0.0%</h3>
+            <div class="relative bg-white p-4 rounded-xl border border-amber-300 shadow-sm hover:shadow-md hover:shadow-amber-100 transition-all duration-200 overflow-hidden">
+                <svg aria-hidden="true" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl">
+                    <rect width="100%" height="100%" rx="12" fill="none" stroke="#f59e0b" stroke-width="3" class="run-beam" style="filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));" />
+                </svg>
+                <div class="relative z-10">
+                    <p class="text-xs text-slate-500 font-medium">Batch Average</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <h3 class="text-2xl font-bold text-slate-800" th:text="${batchAverage + '%'}">0.0%</h3>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-xs text-slate-500 font-medium">Pass Rate (Marks &ge; 35)</p>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <h3 class="text-2xl font-bold text-emerald-600" th:text="${passRate + '%'}">0.0%</h3>
-                    <span class="text-[11px] text-slate-400" th:text="${passedCount + '/' + totalEntries + ' Passed'}">0/0 Passed</span>
+            <div class="relative bg-white p-4 rounded-xl border border-amber-300 shadow-sm hover:shadow-md hover:shadow-amber-100 transition-all duration-200 overflow-hidden">
+                <svg aria-hidden="true" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl">
+                    <rect width="100%" height="100%" rx="12" fill="none" stroke="#f59e0b" stroke-width="3" class="run-beam" style="filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));" />
+                </svg>
+                <div class="relative z-10">
+                    <p class="text-xs text-slate-500 font-medium">Pass Rate (Marks &ge; 35)</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <h3 class="text-2xl font-bold text-emerald-600" th:text="${passRate + '%'}">0.0%</h3>
+                        <span class="text-[11px] text-slate-400" th:text="${passedCount + '/' + totalEntries + ' Passed'}">0/0 Passed</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-xs text-slate-500 font-medium">Highest Aggregate</p>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <h3 class="text-2xl font-bold text-indigo-600" th:text="${highestAggregate}">0</h3>
+            <div class="relative bg-white p-4 rounded-xl border border-amber-300 shadow-sm hover:shadow-md hover:shadow-amber-100 transition-all duration-200 overflow-hidden">
+                <svg aria-hidden="true" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl">
+                    <rect width="100%" height="100%" rx="12" fill="none" stroke="#f59e0b" stroke-width="3" class="run-beam" style="filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));" />
+                </svg>
+                <div class="relative z-10">
+                    <p class="text-xs text-slate-500 font-medium">Highest Aggregate</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <h3 class="text-2xl font-bold text-indigo-600" th:text="${highestAggregate}">0</h3>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p class="text-xs text-slate-500 font-medium">Top Subject</p>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <h3 class="text-2xl font-bold text-slate-800" th:text="${topSubjectName}">N/A</h3>
-                    <span class="text-[11px] text-indigo-600 font-medium font-mono" th:text="'Avg: ' + ${topSubjectAvg}">Avg: 0.0</span>
+            <div class="relative bg-white p-4 rounded-xl border border-amber-300 shadow-sm hover:shadow-md hover:shadow-amber-100 transition-all duration-200 overflow-hidden">
+                <svg aria-hidden="true" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl">
+                    <rect width="100%" height="100%" rx="12" fill="none" stroke="#f59e0b" stroke-width="3" class="run-beam" style="filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));" />
+                </svg>
+                <div class="relative z-10">
+                    <p class="text-xs text-slate-500 font-medium">Top Subject</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <h3 class="text-2xl font-bold text-slate-800" th:text="${topSubjectName}">N/A</h3>
+                        <span class="text-[11px] text-indigo-600 font-medium font-mono" th:text="'Avg: ' + ${topSubjectAvg}">Avg: 0.0</span>
+                    </div>
                 </div>
             </div>
         </div>
